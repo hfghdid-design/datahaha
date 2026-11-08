@@ -49,16 +49,16 @@ footer{text-align:center;padding:20px;color:#8490a6;font-size:12px}
 <body>
 <header>
 <h1>ADMIN DATA MANAGER</h1>
-<small>Quản lý dữ liệu kiểm thử • Tối đa 10 dòng</small>
+<small>Quản lý dữ liệu kiểm thử • Mỗi lần nhập tối đa 10 dòng</small>
 </header>
 
 <main>
 
 <div class="stats">
- <div class="stat"><strong id="total">0/10</strong><small>Tổng dữ liệu</small></div>
+ <div class="stat"><strong id="total">0</strong><small>Tổng dữ liệu</small></div>
  <div class="stat"><strong id="phoneDup" class="bad">0</strong><small>SĐT trùng</small></div>
  <div class="stat"><strong id="accDup" class="bad">0</strong><small>STK trùng</small></div>
- <div class="stat"><strong id="proxyTotal">0/10</strong><small>Proxy</small></div>
+ <div class="stat"><strong id="proxyTotal">0</strong><small>Proxy</small></div>
 </div>
 
 <section class="panel">
@@ -132,7 +132,7 @@ footer{text-align:center;padding:20px;color:#8490a6;font-size:12px}
 </section>
 
 <section class="panel">
-<h3>2. Danh sách dữ liệu (tối đa 10 dòng)</h3>
+<h3>2. Danh sách dữ liệu</h3>
 <input id="search" placeholder="Tìm kiếm..." oninput="render()">
 <div class="actions">
 <button onclick="exportTxt()">Xuất TXT</button>
@@ -180,7 +180,7 @@ footer{text-align:center;padding:20px;color:#8490a6;font-size:12px}
 
 </main>
 
-<footer>ADMIN DATA MANAGER • MAX 10 ROWS</footer>
+<footer>ADMIN DATA MANAGER • Mỗi lần nhập tối đa 10 dòng</footer>
 
 <script>
 "use strict";
@@ -223,8 +223,16 @@ function checkLimit(id,max){
  return true;
 }
 
+// KIỂM TRA TRÙNG
 function checkList(id){
  const values=lines(id);
+ const keyName=id==="phones"?"phone":
+               id==="accounts"?"account":null;
+
+ const existing=keyName
+  ? rows.map(r=>String(r[keyName]||"").trim().toLowerCase()).filter(Boolean)
+  : [];
+
  const counts=new Map();
 
  values.forEach(v=>{
@@ -233,26 +241,29 @@ function checkList(id){
  });
 
  const duplicates=[...counts.entries()]
- .filter(([,n])=>n>1);
+  .filter(([v,n])=>n>1||existing.includes(v));
 
  const result=document.getElementById("check_"+id);
-
  let msg="Đã nhận "+values.length+"/10 mục.";
 
  if(duplicates.length){
-  msg+=" Trùng "+duplicates.length+" giá trị: "+
-  duplicates.map(([v,n])=>v+" × "+n).join("; ");
+  msg+=" Phát hiện trùng "+duplicates.length+" giá trị: "+
+   duplicates.map(([v,n])=>
+    v+(n>1?" × "+n:" (đã tồn tại)")
+   ).join("; ");
  }else{
   msg+=" Không phát hiện mục trùng.";
  }
 
  result.textContent=msg;
- result.className="checkresult "+(duplicates.length?"warn":"ok");
+ result.className="checkresult "+
+  (duplicates.length?"warn":"ok");
 }
 
 function randomDigits(length=10){
  let s="";
- for(let i=0;i<length;i++)s+=Math.floor(Math.random()*10);
+ for(let i=0;i<length;i++)
+  s+=Math.floor(Math.random()*10);
  return s;
 }
 
@@ -260,16 +271,27 @@ function makeTestProxy(i){
  return "TEST-PROXY-"+String(i+1).padStart(2,"0");
 }
 
+// TẠO PROXY TEST
 function generateTestProxies(){
- proxies=Array.from({length:10},(_,i)=>makeTestProxy(i));
+ proxies=Array.from(
+  {length:10},
+  (_,i)=>makeTestProxy(i)
+ );
+
  nextProxyIndex=0;
- document.getElementById("proxies").value=proxies.join("\n");
+
+ document.getElementById("proxies").value=
+  proxies.join("\n");
+
  save();
  render();
+
  notice("Đã tạo 10 Proxy TEST.");
 }
 
+// TẠO DỮ LIỆU
 function generate(){
+
  const names=lines("names");
  const phones=lines("phones");
  const accounts=lines("accounts");
@@ -300,21 +322,71 @@ function generate(){
   return;
  }
 
- if(rows.length+names.length>LIMIT){
-  notice("Tổng dữ liệu chỉ được tối đa 10 dòng. Hiện có "+rows.length+" dòng.");
+ // KIỂM TRA TRÙNG VỚI DỮ LIỆU CŨ VÀ DỮ LIỆU MỚI
+ const duplicateMessages=[];
+
+ [
+  ["SĐT",phones,"phone"],
+  ["STK",accounts,"account"]
+ ].forEach(([label,values,key])=>{
+
+  const seen=new Set(
+   rows.map(r=>
+    String(r[key]||"").trim().toLowerCase()
+   ).filter(Boolean)
+  );
+
+  const repeated=new Set();
+
+  values.forEach(value=>{
+   const normalized=value.trim().toLowerCase();
+
+   if(!normalized)return;
+
+   if(seen.has(normalized)){
+    repeated.add(value);
+   }
+
+   seen.add(normalized);
+  });
+
+  if(repeated.size){
+   duplicateMessages.push(
+    label+" trùng: "+[...repeated].join(", ")
+   );
+  }
+ });
+
+ if(duplicateMessages.length){
+  notice(
+   "Không tạo vì dữ liệu bị trùng. "+
+   duplicateMessages.join(" | ")+
+   ". Hãy sửa SĐT/STK rồi tạo lại."
+  );
   return;
  }
 
- if(proxyLines.length)proxies=proxyLines;
+ // KHÔNG GIỚI HẠN TỔNG SỐ DỮ LIỆU ĐÃ LƯU
+ // MỖI LẦN NHẬP TỐI ĐA 10 DÒNG
+
+ if(proxyLines.length){
+  proxies=proxyLines;
+ }
 
  if(!proxies.length){
-  proxies=Array.from({length:10},(_,i)=>makeTestProxy(i));
+  proxies=Array.from(
+   {length:10},
+   (_,i)=>makeTestProxy(i)
+  );
  }
 
  const bank=document.getElementById("defaultBank").value;
 
  names.forEach((name,i)=>{
-  const proxy=proxies[nextProxyIndex%proxies.length];
+
+  const proxy=proxies[
+   nextProxyIndex%proxies.length
+  ];
 
   rows.push({
    id:Date.now()+"-"+counter++,
@@ -325,72 +397,123 @@ function generate(){
    proxy:proxy
   });
 
-  nextProxyIndex=(nextProxyIndex+1)%proxies.length;
+  nextProxyIndex=
+   (nextProxyIndex+1)%proxies.length;
  });
 
+ // CHỈ XÓA Ô NHẬP, KHÔNG XÓA DỮ LIỆU ĐÃ LƯU
  ["names","phones","accounts"].forEach(id=>{
   document.getElementById(id).value="";
  });
 
  save();
  render();
- notice("Đã tạo "+names.length+" dòng dữ liệu.");
+
+ notice("Đã tạo "+names.length+
+  " dòng dữ liệu. Tổng hiện tại: "+rows.length);
 }
 
+// XÓA Ô NHẬP
 function clearInputs(){
- ["names","phones","accounts","proxies"].forEach(id=>{
+ [
+  "names",
+  "phones",
+  "accounts",
+  "proxies"
+ ].forEach(id=>{
   document.getElementById(id).value="";
  });
 }
 
+// ĐẾM TRÙNG
 function countDuplicates(key){
+
  const counts={};
 
  rows.forEach(r=>{
-  const value=String(r[key]||"").trim().toLowerCase();
-  if(value)counts[value]=(counts[value]||0)+1;
+  const value=String(r[key]||"")
+   .trim().toLowerCase();
+
+  if(value){
+   counts[value]=(counts[value]||0)+1;
+  }
  });
 
- return Object.values(counts).filter(n=>n>1).length;
+ return Object.values(counts)
+  .filter(n=>n>1).length;
 }
 
+// CẬP NHẬT DỮ LIỆU
 function update(id,key,value){
+
  const row=rows.find(r=>r.id===id);
+
  if(!row)return;
+
  row[key]=value;
+
  save();
  render();
 }
 
+// XÓA TỪNG DÒNG
 function removeRow(id){
+
  if(!confirm("Xóa dòng này?"))return;
+
  rows=rows.filter(r=>r.id!==id);
+
  save();
  render();
 }
 
+// TẠO Ô INPUT
 function createInput(value,label,callback){
+
  const input=document.createElement("input");
+
  input.value=value||"";
  input.setAttribute("aria-label",label);
- input.addEventListener("change",e=>callback(e.target.value));
+
+ input.addEventListener("change",e=>{
+  callback(e.target.value);
+ });
+
  return input;
 }
 
+// HIỂN THỊ DỮ LIỆU
 function render(){
+
  const body=document.getElementById("data");
- const query=document.getElementById("search").value.toLowerCase();
+ const query=document.getElementById("search")
+  .value.toLowerCase();
 
  body.replaceChildren();
 
- document.getElementById("total").textContent=rows.length+"/10";
- document.getElementById("phoneDup").textContent=countDuplicates("phone");
- document.getElementById("accDup").textContent=countDuplicates("account");
- document.getElementById("proxyTotal").textContent=proxies.length+"/10";
+ document.getElementById("total").textContent=
+  rows.length;
+
+ document.getElementById("phoneDup").textContent=
+  countDuplicates("phone");
+
+ document.getElementById("accDup").textContent=
+  countDuplicates("account");
+
+ document.getElementById("proxyTotal").textContent=
+  proxies.length;
 
  rows.forEach(r=>{
-  if(![r.name,r.phone,r.account,r.bank,r.proxy]
-   .join(" ").toLowerCase().includes(query))return;
+
+  if(![
+   r.name,
+   r.phone,
+   r.account,
+   r.bank,
+   r.proxy
+  ].join(" ").toLowerCase().includes(query)){
+   return;
+  }
 
   const tr=document.createElement("tr");
 
@@ -400,28 +523,57 @@ function render(){
    tr.append(td);
   }
 
-  cell(createInput(r.name,"Tên",v=>update(r.id,"name",v)));
-  cell(createInput(r.phone,"SĐT",v=>update(r.id,"phone",v)));
-  cell(createInput(r.account,"STK",v=>update(r.id,"account",v)));
+  cell(createInput(
+   r.name,
+   "Tên",
+   v=>update(r.id,"name",v)
+  ));
+
+  cell(createInput(
+   r.phone,
+   "SĐT",
+   v=>update(r.id,"phone",v)
+  ));
+
+  cell(createInput(
+   r.account,
+   "STK",
+   v=>update(r.id,"account",v)
+  ));
 
   const bank=document.createElement("select");
+
   BANKS.forEach(b=>{
+
    const option=document.createElement("option");
+
    option.value=b;
    option.textContent=b;
    option.selected=b===r.bank;
+
    bank.append(option);
   });
-  bank.addEventListener("change",e=>update(r.id,"bank",e.target.value));
+
+  bank.addEventListener("change",e=>{
+   update(r.id,"bank",e.target.value);
+  });
+
   cell(bank);
 
-  cell(createInput(r.proxy,"Proxy",v=>update(r.id,"proxy",v)));
+  cell(createInput(
+   r.proxy,
+   "Proxy",
+   v=>update(r.id,"proxy",v)
+  ));
 
   const td=document.createElement("td");
+
   const del=document.createElement("button");
+
   del.className="danger";
   del.textContent="Xóa";
   del.onclick=()=>removeRow(r.id);
+
   td.append(del);
   tr.append(td);
 
@@ -433,128 +585,236 @@ function render(){
   " • STK trùng: "+countDuplicates("account");
 
  document.getElementById("rotationInfo").textContent=
-  "Proxy: "+proxies.length+"/10. Proxy được xoay vòng tự động.";
+  "Proxy: "+proxies.length+
+  ". Proxy được xoay vòng tự động.";
 
  updateResult();
 }
 
+// KIỂM TRA ĐẦY ĐỦ
 function isComplete(r){
- return ["name","phone","account","bank","proxy"]
- .every(k=>String(r[k]||"").trim());
+
+ return [
+  "name",
+  "phone",
+  "account",
+  "bank",
+  "proxy"
+ ].every(k=>String(r[k]||"").trim());
 }
 
+// XUẤT KẾT QUẢ
 function output(){
+
  return rows.filter(isComplete).map(r=>
-  [r.name,r.phone,r.account,r.bank,r.proxy]
-  .map(v=>String(v).trim()).join("|")
+  [
+   r.name,
+   r.phone,
+   r.account,
+   r.bank,
+   r.proxy
+  ].map(v=>String(v).trim()).join("|")
  ).join("\n");
 }
 
+// CẬP NHẬT KẾT QUẢ
 function updateResult(){
+
  const complete=rows.filter(isComplete).length;
- document.getElementById("resultOutput").value=output();
+
+ document.getElementById("resultOutput").value=
+  output();
+
  document.getElementById("resultStatus").textContent=
-  complete+" dòng hoàn chỉnh / "+rows.length+" dòng.";
+  complete+" dòng hoàn chỉnh / "+
+  rows.length+" dòng.";
 }
 
+// SAO CHÉP
 async function copyResult(){
+
  const text=output();
- if(!text)return alert("Chưa có dữ liệu hoàn chỉnh.");
+
+ if(!text){
+  return alert("Chưa có dữ liệu hoàn chỉnh.");
+ }
 
  try{
   await navigator.clipboard.writeText(text);
  }catch(e){
+
   const box=document.getElementById("resultOutput");
+
   box.focus();
   box.select();
+
   document.execCommand("copy");
  }
+
  alert("Đã sao chép kết quả.");
 }
 
+// TẢI FILE
 function download(content,filename,type){
- const blob=new Blob([content],{type:type+";charset=utf-8"});
+
+ const blob=new Blob(
+  [content],
+  {type:type+";charset=utf-8"}
+ );
+
  const url=URL.createObjectURL(blob);
+
  const a=document.createElement("a");
+
  a.href=url;
  a.download=filename;
  a.click();
- setTimeout(()=>URL.revokeObjectURL(url),1000);
+
+ setTimeout(()=>{
+  URL.revokeObjectURL(url);
+ },1000);
 }
 
+// XUẤT TXT
 function exportTxt(){
- if(!output())return alert("Chưa có dữ liệu hoàn chỉnh.");
- download(output(),"test-data.txt","text/plain");
+
+ if(!output()){
+  return alert("Chưa có dữ liệu hoàn chỉnh.");
+ }
+
+ download(
+  output(),
+  "test-data.txt",
+  "text/plain"
+ );
 }
 
+// XUẤT CSV
 function exportCsv(){
+
  const complete=rows.filter(isComplete);
- if(!complete.length)return alert("Chưa có dữ liệu hoàn chỉnh.");
+
+ if(!complete.length){
+  return alert("Chưa có dữ liệu hoàn chỉnh.");
+ }
 
  const csv=[
   ["TEN","SDT_TEST","STK_TEST","NGAN_HANG","PROXY"],
-  ...complete.map(r=>[r.name,r.phone,r.account,r.bank,r.proxy])
+
+  ...complete.map(r=>[
+   r.name,
+   r.phone,
+   r.account,
+   r.bank,
+   r.proxy
+  ])
+
  ].map(row=>row.map(v=>
   '"'+String(v).replace(/"/g,'""')+'"'
  ).join(",")).join("\r\n");
 
- download("\uFEFF"+csv,"test-data.csv","text/csv");
+ download(
+  "\uFEFF"+csv,
+  "test-data.csv",
+  "text/csv"
+ );
 }
 
+// XÓA TOÀN BỘ
 function clearAll(){
+
  if(!confirm("Xóa toàn bộ dữ liệu?"))return;
+
  rows=[];
  proxies=[];
  nextProxyIndex=0;
  counter=1;
+
  save();
  render();
+
  notice("Đã xóa toàn bộ.");
 }
 
+// LƯU LOCAL STORAGE
 function save(){
- localStorage.setItem(KEY,JSON.stringify({
-  rows,proxies,nextProxyIndex,counter
- }));
+
+ localStorage.setItem(
+  KEY,
+  JSON.stringify({
+   rows,
+   proxies,
+   nextProxyIndex,
+   counter
+  })
+ );
 }
 
+// SAO LƯU JSON
 function backup(){
+
  download(
-  JSON.stringify({rows,proxies,nextProxyIndex,counter},null,2),
+  JSON.stringify({
+   rows,
+   proxies,
+   nextProxyIndex,
+   counter
+  },null,2),
   "backup.json",
   "application/json"
  );
 }
 
+// KHÔI PHỤC JSON
 function restore(event){
+
  const file=event.target.files[0];
+
  if(!file)return;
 
  const reader=new FileReader();
 
  reader.onload=()=>{
+
   try{
+
    const data=JSON.parse(reader.result);
 
-   if(!Array.isArray(data.rows)||!Array.isArray(data.proxies)){
+   if(
+    !Array.isArray(data.rows)||
+    !Array.isArray(data.proxies)
+   ){
     throw new Error("File không hợp lệ.");
    }
 
-   if(data.rows.length>LIMIT||data.proxies.length>LIMIT){
-    throw new Error("File vượt giới hạn 10 dòng.");
+   if(data.proxies.length>LIMIT){
+    throw new Error(
+     "Danh sách Proxy trong file vượt giới hạn 10 dòng."
+    );
    }
 
-   if(!confirm("Khôi phục và thay thế dữ liệu hiện tại?"))return;
+   if(!confirm(
+    "Khôi phục và thay thế dữ liệu hiện tại?"
+   )){
+    return;
+   }
 
    rows=data.rows;
    proxies=data.proxies;
-   nextProxyIndex=Number(data.nextProxyIndex)||0;
-   counter=Number(data.counter)||1;
+
+   nextProxyIndex=
+    Number(data.nextProxyIndex)||0;
+
+   counter=
+    Number(data.counter)||1;
 
    save();
    render();
+
    notice("Khôi phục thành công.");
+
   }catch(e){
+
    alert(e.message);
   }
  };
@@ -563,16 +823,32 @@ function restore(event){
  event.target.value="";
 }
 
+// TẢI DỮ LIỆU CŨ
 function load(){
+
  try{
-  const data=JSON.parse(localStorage.getItem(KEY)||"{}");
 
-  rows=Array.isArray(data.rows)?data.rows.slice(0,LIMIT):[];
-  proxies=Array.isArray(data.proxies)?data.proxies.slice(0,LIMIT):[];
+  const data=JSON.parse(
+   localStorage.getItem(KEY)||"{}"
+  );
 
-  nextProxyIndex=Number(data.nextProxyIndex)||0;
-  counter=Number(data.counter)||1;
+  // Không cắt dữ liệu cũ còn 10 dòng nữa
+  rows=Array.isArray(data.rows)
+   ?data.rows
+   :[];
+
+  proxies=Array.isArray(data.proxies)
+   ?data.proxies.slice(0,LIMIT)
+   :[];
+
+  nextProxyIndex=
+   Number(data.nextProxyIndex)||0;
+
+  counter=
+   Number(data.counter)||1;
+
  }catch(e){
+
   rows=[];
   proxies=[];
   nextProxyIndex=0;
@@ -583,6 +859,7 @@ function load(){
 }
 
 load();
+
 </script>
 </body>
 </html>
