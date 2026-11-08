@@ -46,17 +46,17 @@ footer{text-align:center;padding:20px;color:#8490a6;font-size:12px}
 }
 </style>
 </head>
-
 <body>
+
 <header>
 <h1>ADMIN DATA MANAGER</h1>
-<small>Quản lý dữ liệu kiểm thử • Không giới hạn tổng số dòng đã lưu</small>
+<small>Mỗi lượt tạo 10 dòng mới • Không copy dữ liệu cũ</small>
 </header>
 
 <main>
 
 <div class="stats">
- <div class="stat"><strong id="total">0</strong><small>Tổng dữ liệu</small></div>
+ <div class="stat"><strong id="total">0</strong><small>Tổng dữ liệu đã lưu</small></div>
  <div class="stat"><strong id="phoneDup" class="bad">0</strong><small>SĐT trùng</small></div>
  <div class="stat"><strong id="accDup" class="bad">0</strong><small>STK trùng</small></div>
  <div class="stat"><strong id="proxyTotal">0/10</strong><small>Proxy</small></div>
@@ -65,8 +65,8 @@ footer{text-align:center;padding:20px;color:#8490a6;font-size:12px}
 <section class="panel">
 <h3>1. Nhập danh sách</h3>
 
-<label>Tên (tối đa 10 dòng mỗi lần tạo)</label>
-<textarea id="names" placeholder="Mỗi dòng một tên..." oninput="checkLimit('names',10)"></textarea>
+<label>Tên (bắt buộc đủ 10 dòng)</label>
+<textarea id="names" placeholder="Nhập đúng 10 tên, mỗi dòng một tên..." oninput="checkLimit('names',10)"></textarea>
 <div class="checkline">
 <button class="secondary" onclick="checkList('names')">Kiểm tra tên</button>
 <span id="check_names" class="checkresult">Chưa kiểm tra.</span>
@@ -74,8 +74,8 @@ footer{text-align:center;padding:20px;color:#8490a6;font-size:12px}
 
 <div class="grid2">
 <div>
-<label>SĐT (tối đa 10 dòng mỗi lần tạo)</label>
-<textarea id="phones" placeholder="Mỗi dòng một SĐT... Để trống nếu muốn tạo ngẫu nhiên." oninput="checkLimit('phones',10)"></textarea>
+<label>SĐT (có thể để trống để tạo ngẫu nhiên)</label>
+<textarea id="phones" placeholder="Mỗi dòng một SĐT, tối đa 10 dòng..." oninput="checkLimit('phones',10)"></textarea>
 <div class="checkline">
 <button class="secondary" onclick="checkList('phones')">Kiểm tra SĐT</button>
 <span id="check_phones" class="checkresult">Chưa kiểm tra.</span>
@@ -83,8 +83,8 @@ footer{text-align:center;padding:20px;color:#8490a6;font-size:12px}
 </div>
 
 <div>
-<label>STK (tối đa 10 dòng mỗi lần tạo)</label>
-<textarea id="accounts" placeholder="Mỗi dòng một STK..." oninput="checkLimit('accounts',10)"></textarea>
+<label>STK (có thể để trống để tạo ngẫu nhiên)</label>
+<textarea id="accounts" placeholder="Mỗi dòng một STK, tối đa 10 dòng..." oninput="checkLimit('accounts',10)"></textarea>
 <div class="checkline">
 <button class="secondary" onclick="checkList('accounts')">Kiểm tra STK</button>
 <span id="check_accounts" class="checkresult">Chưa kiểm tra.</span>
@@ -125,7 +125,7 @@ footer{text-align:center;padding:20px;color:#8490a6;font-size:12px}
 </div>
 
 <div class="actions">
-<button onclick="generate()">+ Tạo dữ liệu</button>
+<button onclick="generate()">+ Tạo 10 dòng mới</button>
 <button class="secondary" onclick="generateTestProxies()">Tạo 10 Proxy TEST</button>
 <button class="secondary" onclick="clearInputs()">Xóa ô nhập</button>
 </div>
@@ -133,24 +133,20 @@ footer{text-align:center;padding:20px;color:#8490a6;font-size:12px}
 </section>
 
 <section class="panel">
-<h3>2. Danh sách dữ liệu</h3>
+<h3>2. Danh sách dữ liệu đã lưu</h3>
 <input id="search" placeholder="Tìm kiếm..." oninput="render()">
 <div class="actions">
-<button onclick="exportTxt()">Xuất TXT</button>
-<button onclick="exportCsv()">Xuất CSV</button>
-<button class="secondary" onclick="copyResult()">Sao chép</button>
+<button onclick="exportTxt()">Xuất TXT lượt mới nhất</button>
+<button onclick="exportCsv()">Xuất CSV lượt mới nhất</button>
+<button class="secondary" onclick="copyResult()">Sao chép 10 dòng mới nhất</button>
 <button class="danger" onclick="clearAll()">Xóa toàn bộ</button>
 </div>
 <div class="tablewrap">
 <table>
 <thead>
 <tr>
-<th>TÊN</th>
-<th>SĐT</th>
-<th>STK</th>
-<th>NGÂN HÀNG</th>
-<th>PROXY</th>
-<th>THAO TÁC</th>
+<th>TÊN</th><th>SĐT</th><th>STK</th>
+<th>NGÂN HÀNG</th><th>PROXY</th><th>THAO TÁC</th>
 </tr>
 </thead>
 <tbody id="data"></tbody>
@@ -159,10 +155,10 @@ footer{text-align:center;padding:20px;color:#8490a6;font-size:12px}
 </section>
 
 <section class="panel">
-<h3>3. Kết quả hoàn chỉnh</h3>
-<p class="muted">Định dạng: tên|sdt|stk|ngân hàng|proxy</p>
+<h3>3. Kết quả lượt tạo gần nhất</h3>
+<p class="muted">Chỉ hiển thị 10 dòng vừa tạo, không gộp dữ liệu cũ.</p>
 <textarea id="resultOutput" readonly></textarea>
-<button onclick="copyResult()">Sao chép kết quả</button>
+<button onclick="copyResult()">Sao chép 10 dòng mới nhất</button>
 <p id="resultStatus" class="hint"></p>
 </section>
 
@@ -170,7 +166,7 @@ footer{text-align:center;padding:20px;color:#8490a6;font-size:12px}
 <h3>4. Kiểm tra dữ liệu</h3>
 <p id="duplicateInfo" class="muted"></p>
 <p id="rotationInfo" class="muted"></p>
-<p class="warning">Số điện thoại ngẫu nhiên chỉ dùng làm dữ liệu kiểm thử; không đảm bảo là số chưa được cấp cho thuê bao thực.</p>
+<p class="warning">Số ngẫu nhiên chỉ dùng làm dữ liệu kiểm thử, không đảm bảo chưa được cấp cho thuê bao thực.</p>
 </section>
 
 <section class="panel">
@@ -195,28 +191,12 @@ const BANKS=[
 "MSB","HDBank","VIB","OCB","Eximbank","TEST Bank"
 ];
 
-// Các đầu số di động Việt Nam
 const PHONE_PREFIXES=[
- // Viettel
- "032","033","034","035","036","037","038","039",
- "086","096","097","098",
-
- // Vinaphone
- "081","082","083","084","085",
- "088","091","094",
-
- // Mobifone
- "070","076","077","078","079",
- "089","090","093",
-
- // Vietnamobile
- "052","056","058","092",
-
- // Gmobile
- "059","099",
-
- // iTel và Reddi
- "087","055"
+"032","033","034","035","036","037","038","039",
+"086","096","097","098",
+"081","082","083","084","085","088","091","094",
+"070","076","077","078","079","089","090","093",
+"052","056","058","092","059","099","087","055"
 ];
 
 let rows=[];
@@ -224,19 +204,20 @@ let proxies=[];
 let nextProxyIndex=0;
 let counter=1;
 
+// Lưu ID của đúng 10 dòng trong lượt tạo gần nhất.
+let lastBatchIds=[];
+
 function notice(msg){
  document.getElementById("notice").textContent=msg;
 }
 
 function lines(id){
  return document.getElementById(id).value
- .split(/\r?\n/)
- .map(x=>x.trim())
- .filter(Boolean);
+ .split(/\r?\n/).map(x=>x.trim()).filter(Boolean);
 }
 
-function normalize(value){
- return String(value||"").trim().toLowerCase();
+function norm(v){
+ return String(v||"").trim().toLowerCase();
 }
 
 function checkLimit(id,max){
@@ -256,14 +237,10 @@ function checkLimit(id,max){
 
 function findDuplicates(values){
  const counts=new Map();
-
- values.forEach(value=>{
-  const key=normalize(value);
-  if(key){
-   counts.set(key,(counts.get(key)||0)+1);
-  }
+ values.forEach(v=>{
+  const k=norm(v);
+  if(k)counts.set(k,(counts.get(k)||0)+1);
  });
-
  return [...counts.entries()].filter(([,n])=>n>1);
 }
 
@@ -275,8 +252,7 @@ function checkList(id){
  let msg="Đã nhận "+values.length+"/10 mục.";
 
  if(duplicates.length){
-  msg+=" Trùng "+duplicates.length+" giá trị: "+
-  duplicates.map(([v,n])=>v+" × "+n).join("; ");
+  msg+=" Trùng: "+duplicates.map(([v,n])=>v+" × "+n).join("; ");
  }else{
   msg+=" Không phát hiện mục trùng.";
  }
@@ -287,29 +263,34 @@ function checkList(id){
 
 function randomDigits(length=10){
  let s="";
- for(let i=0;i<length;i++){
-  s+=Math.floor(Math.random()*10);
- }
+ for(let i=0;i<length;i++)s+=Math.floor(Math.random()*10);
  return s;
 }
 
-function randomPhone(usedPhones=new Set()){
- // Tạo số 10 chữ số, đầu 0, theo đầu số di động Việt Nam.
- // Tránh trùng với dữ liệu đã lưu và các số vừa tạo trong lượt hiện tại.
- for(let attempt=0;attempt<1000;attempt++){
+function randomPhone(used){
+ for(let attempt=0;attempt<5000;attempt++){
   const prefix=PHONE_PREFIXES[
    Math.floor(Math.random()*PHONE_PREFIXES.length)
   ];
-
   const phone=prefix+randomDigits(7);
 
-  if(!usedPhones.has(normalize(phone))){
-   usedPhones.add(normalize(phone));
+  if(!used.has(norm(phone))){
+   used.add(norm(phone));
    return phone;
   }
  }
+ throw new Error("Không tạo được SĐT mới không trùng.");
+}
 
- throw new Error("Không tạo được SĐT ngẫu nhiên không trùng.");
+function randomAccount(used){
+ for(let attempt=0;attempt<5000;attempt++){
+  const account=randomDigits(10);
+  if(!used.has(norm(account))){
+   used.add(norm(account));
+   return account;
+  }
+ }
+ throw new Error("Không tạo được STK mới không trùng.");
 }
 
 function makeTestProxy(i){
@@ -319,33 +300,27 @@ function makeTestProxy(i){
 function generateTestProxies(){
  proxies=Array.from({length:10},(_,i)=>makeTestProxy(i));
  nextProxyIndex=0;
-
  document.getElementById("proxies").value=proxies.join("\n");
-
  save();
  render();
  notice("Đã tạo 10 Proxy TEST.");
 }
 
-function validateNoDuplicates(values,label,existingValues=[]){
- const batchDuplicates=findDuplicates(values);
+function validateInput(values,label,existing){
+ const duplicates=findDuplicates(values);
 
- if(batchDuplicates.length){
+ if(duplicates.length){
   return label+" bị trùng trong danh sách nhập: "+
-   batchDuplicates.map(([v])=>v).join(", ");
+   duplicates.map(([v])=>v).join(", ");
  }
 
- const existingSet=new Set(
-  existingValues.map(normalize).filter(Boolean)
- );
-
+ const oldSet=new Set(existing.map(norm).filter(Boolean));
  const conflicts=[...new Set(
-  values.map(normalize).filter(v=>v&&existingSet.has(v))
+  values.map(norm).filter(v=>v&&oldSet.has(v))
  )];
 
  if(conflicts.length){
-  return label+" đã tồn tại trong dữ liệu cũ: "+
-   conflicts.join(", ");
+  return label+" đã được tạo trước đó: "+conflicts.join(", ");
  }
 
  return "";
@@ -357,122 +332,90 @@ function generate(){
  const accounts=lines("accounts");
  const proxyLines=lines("proxies");
 
- if(!names.length){
-  notice("Vui lòng nhập tên.");
+ // Mỗi lượt phải có đủ 10 tên.
+ if(names.length!==10){
+  notice("Bạn cần nhập đúng 10 tên để tạo 10 dòng mới.");
   return;
  }
 
- if(names.length>LIMIT){
-  notice("Tên tối đa 10 dòng mỗi lần tạo.");
+ if(phones.length>10||accounts.length>10||proxyLines.length>10){
+  notice("Mỗi danh sách chỉ được nhập tối đa 10 dòng.");
   return;
  }
 
- if(phones.length>LIMIT){
-  notice("SĐT tối đa 10 dòng mỗi lần tạo.");
+ if(phones.length>names.length||accounts.length>names.length){
+  notice("Số SĐT hoặc STK không được nhiều hơn số tên.");
   return;
  }
 
- if(accounts.length>LIMIT){
-  notice("STK tối đa 10 dòng mỗi lần tạo.");
-  return;
- }
-
- if(proxyLines.length>LIMIT){
-  notice("Proxy tối đa 10 dòng.");
-  return;
- }
-
- // Kiểm tra số lượng SĐT/STK nhập vào phải khớp số tên,
- // hoặc có thể nhập ít hơn để phần còn thiếu được tạo tự động.
- if(phones.length>names.length){
-  notice("Số SĐT nhập vào nhiều hơn số tên.");
-  return;
- }
-
- if(accounts.length>names.length){
-  notice("Số STK nhập vào nhiều hơn số tên.");
-  return;
- }
-
- // Kiểm tra trùng trong danh sách mới và với dữ liệu đã lưu.
- const phoneError=validateNoDuplicates(
-  phones,
-  "SĐT",
-  rows.map(r=>r.phone)
+ // Không cho nhập tên trùng với nhau trong cùng lượt.
+ const nameError=validateInput(
+  names,"Tên",rows.map(r=>r.name)
  );
+ if(nameError){
+  notice(nameError);
+  return;
+ }
 
+ // Không cho dùng lại SĐT và STK đã tồn tại.
+ const phoneError=validateInput(
+  phones,"SĐT",rows.map(r=>r.phone)
+ );
  if(phoneError){
   notice(phoneError);
   return;
  }
 
- const accountError=validateNoDuplicates(
-  accounts,
-  "STK",
-  rows.map(r=>r.account)
+ const accountError=validateInput(
+  accounts,"STK",rows.map(r=>r.account)
  );
-
  if(accountError){
   notice(accountError);
   return;
  }
 
- if(proxyLines.length){
-  proxies=proxyLines;
- }
+ if(proxyLines.length)proxies=proxyLines;
 
  if(!proxies.length){
   proxies=Array.from({length:10},(_,i)=>makeTestProxy(i));
  }
 
+ const usedPhones=new Set(rows.map(r=>norm(r.phone)).filter(Boolean));
+ const usedAccounts=new Set(rows.map(r=>norm(r.account)).filter(Boolean));
+
+ phones.forEach(v=>usedPhones.add(norm(v)));
+ accounts.forEach(v=>usedAccounts.add(norm(v)));
+
  const bank=document.getElementById("defaultBank").value;
-
- // Tập hợp các số đã dùng để tránh tạo trùng số ngẫu nhiên.
- const usedPhones=new Set(
-  rows.map(r=>normalize(r.phone)).filter(Boolean)
- );
-
- phones.forEach(phone=>usedPhones.add(normalize(phone)));
-
- // Tạo trước dữ liệu mới để kiểm tra trùng trước khi lưu.
  const newRows=[];
 
  try{
-  names.forEach((name,i)=>{
+  for(let i=0;i<10;i++){
    const phone=phones[i]||randomPhone(usedPhones);
-   const account=accounts[i]||randomDigits();
+   const account=accounts[i]||randomAccount(usedAccounts);
+   const proxy=proxies[nextProxyIndex%proxies.length];
 
    newRows.push({
     id:Date.now()+"-"+counter++,
-    name:name,
-    phone:phone,
-    account:account,
-    bank:bank,
-    proxy:proxies[nextProxyIndex%proxies.length]
+    name:names[i],
+    phone,
+    account,
+    bank,
+    proxy
    });
 
    nextProxyIndex=(nextProxyIndex+1)%proxies.length;
-  });
- }catch(error){
-  notice(error.message);
+  }
+ }catch(e){
+  notice(e.message);
   return;
  }
 
- // Kiểm tra cả STK ngẫu nhiên mới tạo với STK cũ và nhau.
- const generatedAccounts=newRows.map(r=>r.account);
- const generatedAccountError=validateNoDuplicates(
-  generatedAccounts,
-  "STK",
-  rows.map(r=>r.account)
- );
-
- if(generatedAccountError){
-  notice(generatedAccountError);
-  return;
- }
-
- // Nối dữ liệu mới vào dữ liệu cũ, không xóa dữ liệu đã lưu.
+ // Lưu 10 dòng mới, không thay thế dữ liệu cũ.
  rows.push(...newRows);
+
+ // Ghi nhớ đúng lượt tạo hiện tại để copy riêng lượt này.
+ lastBatchIds=newRows.map(r=>r.id);
 
  ["names","phones","accounts"].forEach(id=>{
   document.getElementById(id).value="";
@@ -481,35 +424,34 @@ function generate(){
  save();
  render();
 
- notice("Đã tạo thêm "+newRows.length+
-  " dòng. Tổng dữ liệu hiện tại: "+rows.length+" dòng.");
+ notice("Đã tạo thành công 10 dòng mới. Tổng dữ liệu: "+rows.length+
+  " dòng. Kết quả sao chép chỉ gồm 10 dòng vừa tạo.");
 }
 
 function clearInputs(){
  ["names","phones","accounts","proxies"].forEach(id=>{
   document.getElementById(id).value="";
  });
+ notice("Đã xóa ô nhập.");
+}
 
- notice("Đã xóa nội dung các ô nhập.");
+function latestRows(){
+ const idSet=new Set(lastBatchIds);
+ return rows.filter(r=>idSet.has(r.id));
 }
 
 function countDuplicates(key){
  const counts={};
-
  rows.forEach(r=>{
-  const value=normalize(r[key]);
-  if(value){
-   counts[value]=(counts[value]||0)+1;
-  }
+  const v=norm(r[key]);
+  if(v)counts[v]=(counts[v]||0)+1;
  });
-
  return Object.values(counts).filter(n=>n>1).length;
 }
 
 function update(id,key,value){
  const row=rows.find(r=>r.id===id);
  if(!row)return;
-
  row[key]=value;
  save();
  render();
@@ -519,6 +461,8 @@ function removeRow(id){
  if(!confirm("Xóa dòng này?"))return;
 
  rows=rows.filter(r=>r.id!==id);
+ lastBatchIds=lastBatchIds.filter(x=>x!==id);
+
  save();
  render();
 }
@@ -527,9 +471,7 @@ function createInput(value,label,callback){
  const input=document.createElement("input");
  input.value=value||"";
  input.setAttribute("aria-label",label);
- input.addEventListener("change",e=>{
-  callback(e.target.value);
- });
+ input.addEventListener("change",e=>callback(e.target.value));
  return input;
 }
 
@@ -545,11 +487,8 @@ function render(){
  document.getElementById("proxyTotal").textContent=proxies.length+"/10";
 
  rows.forEach(r=>{
-  if(![
-   r.name,r.phone,r.account,r.bank,r.proxy
-  ].join(" ").toLowerCase().includes(query)){
-   return;
-  }
+  if(![r.name,r.phone,r.account,r.bank,r.proxy]
+   .join(" ").toLowerCase().includes(query))return;
 
   const tr=document.createElement("tr");
 
@@ -564,7 +503,6 @@ function render(){
   cell(createInput(r.account,"STK",v=>update(r.id,"account",v)));
 
   const bank=document.createElement("select");
-
   BANKS.forEach(b=>{
    const option=document.createElement("option");
    option.value=b;
@@ -572,28 +510,24 @@ function render(){
    option.selected=b===r.bank;
    bank.append(option);
   });
-
-  bank.addEventListener("change",e=>{
-   update(r.id,"bank",e.target.value);
-  });
-
+  bank.addEventListener("change",e=>update(r.id,"bank",e.target.value));
   cell(bank);
+
   cell(createInput(r.proxy,"Proxy",v=>update(r.id,"proxy",v)));
 
   const td=document.createElement("td");
   const del=document.createElement("button");
-
   del.className="danger";
   del.textContent="Xóa";
   del.onclick=()=>removeRow(r.id);
-
   td.append(del);
   tr.append(td);
+
   body.append(tr);
  });
 
  document.getElementById("duplicateInfo").textContent=
-  "SĐT trùng: "+countDuplicates("phone")+
+  "SĐT trùng trong dữ liệu đã lưu: "+countDuplicates("phone")+
   " • STK trùng: "+countDuplicates("account");
 
  document.getElementById("rotationInfo").textContent=
@@ -607,27 +541,28 @@ function isComplete(r){
  .every(k=>String(r[k]||"").trim());
 }
 
+// Chỉ xuất 10 dòng của lượt tạo gần nhất.
 function output(){
- return rows.filter(isComplete).map(r=>
+ return latestRows().filter(isComplete).map(r=>
   [r.name,r.phone,r.account,r.bank,r.proxy]
   .map(v=>String(v).trim()).join("|")
  ).join("\n");
 }
 
 function updateResult(){
- const complete=rows.filter(isComplete).length;
+ const current=latestRows();
+ const complete=current.filter(isComplete).length;
 
  document.getElementById("resultOutput").value=output();
-
  document.getElementById("resultStatus").textContent=
-  complete+" dòng hoàn chỉnh / "+rows.length+" dòng.";
+  "Lượt gần nhất: "+complete+"/10 dòng hoàn chỉnh.";
 }
 
 async function copyResult(){
  const text=output();
 
  if(!text){
-  return alert("Chưa có dữ liệu hoàn chỉnh.");
+  return alert("Chưa có lượt tạo hoàn chỉnh để sao chép.");
  }
 
  try{
@@ -639,50 +574,37 @@ async function copyResult(){
   document.execCommand("copy");
  }
 
- alert("Đã sao chép kết quả.");
+ alert("Đã sao chép "+latestRows().filter(isComplete).length+
+  " dòng của lượt tạo gần nhất.");
 }
 
 function download(content,filename,type){
- const blob=new Blob(
-  [content],
-  {type:type+";charset=utf-8"}
- );
-
+ const blob=new Blob([content],{type:type+";charset=utf-8"});
  const url=URL.createObjectURL(blob);
  const a=document.createElement("a");
-
  a.href=url;
  a.download=filename;
  a.click();
-
  setTimeout(()=>URL.revokeObjectURL(url),1000);
 }
 
 function exportTxt(){
- if(!output()){
-  return alert("Chưa có dữ liệu hoàn chỉnh.");
- }
-
- download(output(),"test-data.txt","text/plain");
+ if(!output())return alert("Chưa có dữ liệu của lượt mới nhất.");
+ download(output(),"latest-batch.txt","text/plain");
 }
 
 function exportCsv(){
- const complete=rows.filter(isComplete);
-
- if(!complete.length){
-  return alert("Chưa có dữ liệu hoàn chỉnh.");
- }
+ const complete=latestRows().filter(isComplete);
+ if(!complete.length)return alert("Chưa có dữ liệu của lượt mới nhất.");
 
  const csv=[
   ["TEN","SDT_TEST","STK_TEST","NGAN_HANG","PROXY"],
-  ...complete.map(r=>[
-   r.name,r.phone,r.account,r.bank,r.proxy
-  ])
+  ...complete.map(r=>[r.name,r.phone,r.account,r.bank,r.proxy])
  ].map(row=>row.map(v=>
   '"'+String(v).replace(/"/g,'""')+'"'
  ).join(",")).join("\r\n");
 
- download("\uFEFF"+csv,"test-data.csv","text/csv");
+ download("\uFEFF"+csv,"latest-batch.csv","text/csv");
 }
 
 function clearAll(){
@@ -692,6 +614,7 @@ function clearAll(){
  proxies=[];
  nextProxyIndex=0;
  counter=1;
+ lastBatchIds=[];
 
  save();
  render();
@@ -703,17 +626,15 @@ function save(){
   rows,
   proxies,
   nextProxyIndex,
-  counter
+  counter,
+  lastBatchIds
  }));
 }
 
 function backup(){
  download(
   JSON.stringify({
-   rows,
-   proxies,
-   nextProxyIndex,
-   counter
+   rows,proxies,nextProxyIndex,counter,lastBatchIds
   },null,2),
   "backup.json",
   "application/json"
@@ -734,25 +655,20 @@ function restore(event){
     throw new Error("File không hợp lệ.");
    }
 
-   if(data.proxies.length>LIMIT){
-    throw new Error("Danh sách Proxy vượt giới hạn 10 dòng.");
+   if(data.proxies.length>10){
+    throw new Error("Proxy vượt giới hạn 10 dòng.");
    }
 
    if(!confirm("Khôi phục và thay thế dữ liệu hiện tại?"))return;
 
-   // Không giới hạn tổng số dòng dữ liệu được khôi phục.
-   rows=data.rows.map((r,i)=>({
-    id:r.id||("restore-"+Date.now()+"-"+i),
-    name:String(r.name||""),
-    phone:String(r.phone||""),
-    account:String(r.account||""),
-    bank:String(r.bank||BANKS[0]),
-    proxy:String(r.proxy||"")
-   }));
-
+   rows=data.rows;
    proxies=data.proxies;
    nextProxyIndex=Number(data.nextProxyIndex)||0;
    counter=Number(data.counter)||1;
+
+   lastBatchIds=Array.isArray(data.lastBatchIds)
+    ?data.lastBatchIds
+    :rows.slice(-10).map(r=>r.id);
 
    save();
    render();
@@ -770,17 +686,21 @@ function load(){
  try{
   const data=JSON.parse(localStorage.getItem(KEY)||"{}");
 
-  // Giữ lại toàn bộ dữ liệu cũ, không cắt còn 10 dòng.
   rows=Array.isArray(data.rows)?data.rows:[];
-  proxies=Array.isArray(data.proxies)?data.proxies.slice(0,LIMIT):[];
-
+  proxies=Array.isArray(data.proxies)?data.proxies.slice(0,10):[];
   nextProxyIndex=Number(data.nextProxyIndex)||0;
   counter=Number(data.counter)||1;
+
+  lastBatchIds=Array.isArray(data.lastBatchIds)
+   ?data.lastBatchIds
+   :rows.slice(-10).map(r=>r.id);
+
  }catch(e){
   rows=[];
   proxies=[];
   nextProxyIndex=0;
   counter=1;
+  lastBatchIds=[];
  }
 
  render();
