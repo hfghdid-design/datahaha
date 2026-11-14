@@ -3,43 +3,76 @@
 <html lang="vi">
 <head>
 <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Quay số 501-999</title>
 <style>
-body {text-align:center;font-family:Arial;padding:30px}
-h1 {font-size:40px;color:blue}
-button {padding:15px 30px;font-size:20px}
+*{box-sizing:border-box}
+body{background:#101114;color:white;text-align:center;font-family:Arial;padding:30px 15px;margin:0}
+.container{max-width:500px;margin:40px auto;background:#1c1e24;padding:30px 20px;border-radius:18px;border:1px solid #333}
+h2{color:#aaa;font-size:23px}
+#result{font-size:clamp(32px,9vw,45px);color:#ff4141;margin:35px 0;letter-spacing:2px;word-break:break-all}
+#count{color:#aaa;font-size:17px}
+button{border:0;border-radius:10px;padding:15px 25px;font-size:17px;font-weight:bold;cursor:pointer;margin:8px}
+#drawBtn{background:#e53935;color:white;width:85%}
+#copyBtn{background:#2196f3;color:white;width:85%}
+button:disabled{background:#555;cursor:not-allowed}
+#message{color:#4caf50;min-height:20px;margin-top:15px}
+.history{text-align:left;background:#14161b;padding:15px;border-radius:10px;margin-top:25px;max-height:300px;overflow-y:auto}
+.history h3{color:#aaa;margin-top:0}
+#historyList{color:#ddd;line-height:2;overflow-wrap:anywhere}
 </style>
 </head>
 <body>
-
-<h2>QUAY SỐ 501 - 999</h2>
-<h1 id="result">056***2768</h1>
+<div class="container">
+<h2>🎯 QUAY SỐ 501 - 999</h2>
+<h1 id="result">56***2768</h1>
 <p id="count">Còn lại: 499 số</p>
-<button onclick="quay()">QUAY SỐ</button>
-
+<button id="drawBtn" onclick="quay()">🎲 QUAY SỐ</button>
+<button id="copyBtn" onclick="copySo()" disabled>📋 COPY SỐ</button>
+<p id="message"></p>
+<div class="history">
+<h3>📋 LỊCH SỬ ĐÃ QUAY</h3>
+<div id="historyList">Chưa có số nào</div>
+</div>
+</div>
 <script>
-let danhSach = Array.from(
-    {length:499}, (_,i) => i + 501
-);
-
-function quay() {
-    if (danhSach.length === 0) {
-        alert("Đã quay hết 499 số!");
-        return;
-    }
-
-    let viTri = Math.floor(Math.random() * danhSach.length);
-    let so = danhSach.splice(viTri, 1)[0];
-
-    let hienThi = String(so).padStart(3, '0');
-
-    document.getElementById("result").innerText =
-        "056" + hienThi + "2768";
-
-    document.getElementById("count").innerText =
-        "Còn lại: " + danhSach.length + " số";
+const KEY="quay_so_501_999";
+let data;
+try{data=JSON.parse(localStorage.getItem(KEY))}catch(e){data=null}
+if(!data||!Array.isArray(data.danhSach)||!Array.isArray(data.daQuay)){
+data={danhSach:Array.from({length:499},(_,i)=>i+501),daQuay:[],hienTai:null};
 }
+function luuDuLieu(){localStorage.setItem(KEY,JSON.stringify(data))}
+function capNhat(){
+document.getElementById("count").innerText="Còn lại: "+data.danhSach.length+" số";
+document.getElementById("drawBtn").disabled=data.danhSach.length===0;
+document.getElementById("copyBtn").disabled=!data.hienTai;
+document.getElementById("result").innerText=data.hienTai||"56***2768";
+document.getElementById("historyList").innerHTML=data.daQuay.length?data.daQuay.map((so,i)=>`<div>${i+1}. ${so}</div>`).join(""):"Chưa có số nào";
+}
+function quay(){
+if(!data.danhSach.length){alert("Đã quay hết 499 số!");return}
+let viTri=Math.floor(Math.random()*data.danhSach.length);
+let so=data.danhSach.splice(viTri,1)[0];
+data.hienTai="56"+String(so).padStart(3,"0")+"2768";
+data.daQuay.unshift(data.hienTai);
+luuDuLieu();capNhat();
+document.getElementById("message").innerText="✅ Quay thành công!";
+}
+async function copySo(){
+if(!data.hienTai)return;
+try{
+await navigator.clipboard.writeText(data.hienTai);
+document.getElementById("message").innerText="✅ Đã copy: "+data.hienTai;
+}catch(e){
+let input=document.createElement("textarea");
+input.value=data.hienTai;document.body.appendChild(input);input.select();
+try{document.execCommand("copy");document.getElementById("message").innerText="✅ Đã copy: "+data.hienTai}
+catch(err){document.getElementById("message").innerText="Không thể copy!"}
+input.remove();
+}
+}
+capNhat();
 </script>
-
 </body>
 </html>
