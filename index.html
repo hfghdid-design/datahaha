@@ -3,76 +3,113 @@
 <html lang="vi">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Quay số 501-999</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Tạo số điện thoại ảo Việt Nam</title>
 <style>
-*{box-sizing:border-box}
-body{background:#101114;color:white;text-align:center;font-family:Arial;padding:30px 15px;margin:0}
-.container{max-width:500px;margin:40px auto;background:#1c1e24;padding:30px 20px;border-radius:18px;border:1px solid #333}
-h2{color:#aaa;font-size:23px}
-#result{font-size:clamp(32px,9vw,45px);color:#ff4141;margin:35px 0;letter-spacing:2px;word-break:break-all}
-#count{color:#aaa;font-size:17px}
-button{border:0;border-radius:10px;padding:15px 25px;font-size:17px;font-weight:bold;cursor:pointer;margin:8px}
-#drawBtn{background:#e53935;color:white;width:85%}
-#copyBtn{background:#2196f3;color:white;width:85%}
-button:disabled{background:#555;cursor:not-allowed}
-#message{color:#4caf50;min-height:20px;margin-top:15px}
-.history{text-align:left;background:#14161b;padding:15px;border-radius:10px;margin-top:25px;max-height:300px;overflow-y:auto}
-.history h3{color:#aaa;margin-top:0}
-#historyList{color:#ddd;line-height:2;overflow-wrap:anywhere}
+body {
+  font-family: Arial, sans-serif;
+  background: #101827;
+  color: white;
+  text-align: center;
+  padding: 40px 15px;
+}
+.container {
+  max-width: 400px;
+  margin: auto;
+  background: #1e293b;
+  padding: 25px;
+  border-radius: 18px;
+}
+h2 { color: #38bdf8; }
+.number {
+  font-size: 27px;
+  font-weight: bold;
+  margin: 25px 0;
+  color: #4ade80;
+  letter-spacing: 2px;
+}
+select, button {
+  width: 100%;
+  padding: 13px;
+  margin: 8px 0;
+  border: none;
+  border-radius: 9px;
+  font-size: 16px;
+}
+button {
+  background: #0284c7;
+  color: white;
+  cursor: pointer;
+}
+button:hover { background: #0369a1; }
+.copy { background: #16a34a; }
+.note { color: #94a3b8; font-size: 12px; }
 </style>
 </head>
 <body>
+
 <div class="container">
-<h2>🎯 QUAY SỐ 501 - 999</h2>
-<h1 id="result">56***2768</h1>
-<p id="count">Còn lại: 499 số</p>
-<button id="drawBtn" onclick="quay()">🎲 QUAY SỐ</button>
-<button id="copyBtn" onclick="copySo()" disabled>📋 COPY SỐ</button>
-<p id="message"></p>
-<div class="history">
-<h3>📋 LỊCH SỬ ĐÃ QUAY</h3>
-<div id="historyList">Chưa có số nào</div>
+  <h2>📱 SỐ ĐIỆN THOẠI VIỆT NAM</h2>
+
+  <select id="network">
+    <option value="all">Tất cả nhà mạng</option>
+    <option value="viettel">Viettel</option>
+    <option value="vina">Vinaphone</option>
+    <option value="mobi">Mobifone</option>
+    <option value="vietnamobile">Vietnamobile</option>
+    <option value="gmobile">Gmobile</option>
+  </select>
+
+  <div class="number" id="result">09xxxxxxxx</div>
+
+  <button onclick="generate()">🎲 Tạo số ngẫu nhiên</button>
+  <button class="copy" onclick="copyNumber()">📋 Sao chép số</button>
+
+  <p class="note">
+    Đây là số giả lập ngẫu nhiên, không đảm bảo là số đang hoạt động.
+    Không dùng để nhận SMS hoặc OTP.
+  </p>
 </div>
-</div>
+
 <script>
-const KEY="quay_so_501_999";
-let data;
-try{data=JSON.parse(localStorage.getItem(KEY))}catch(e){data=null}
-if(!data||!Array.isArray(data.danhSach)||!Array.isArray(data.daQuay)){
-data={danhSach:Array.from({length:499},(_,i)=>i+501),daQuay:[],hienTai:null};
+const networks = {
+  viettel: ["032","033","034","035","036","037","038","039","086","096","097","098"],
+  vina: ["081","082","083","084","085","088","091","094"],
+  mobi: ["070","076","077","078","079","089","090","093"],
+  vietnamobile: ["052","056","058","092"],
+  gmobile: ["059","099"]
+};
+
+function generate() {
+  const selected = document.getElementById("network").value;
+  let prefixes = [];
+
+  if (selected === "all") {
+    prefixes = Object.values(networks).flat();
+  } else {
+    prefixes = networks[selected];
+  }
+
+  const prefix = prefixes[
+    Math.floor(Math.random() * prefixes.length)
+  ];
+
+  let suffix = "";
+  for (let i = 0; i < 7; i++) {
+    suffix += Math.floor(Math.random() * 10);
+  }
+
+  document.getElementById("result").textContent =
+    prefix + suffix;
 }
-function luuDuLieu(){localStorage.setItem(KEY,JSON.stringify(data))}
-function capNhat(){
-document.getElementById("count").innerText="Còn lại: "+data.danhSach.length+" số";
-document.getElementById("drawBtn").disabled=data.danhSach.length===0;
-document.getElementById("copyBtn").disabled=!data.hienTai;
-document.getElementById("result").innerText=data.hienTai||"56***2768";
-document.getElementById("historyList").innerHTML=data.daQuay.length?data.daQuay.map((so,i)=>`<div>${i+1}. ${so}</div>`).join(""):"Chưa có số nào";
+
+function copyNumber() {
+  const number = document.getElementById("result").textContent;
+  navigator.clipboard.writeText(number)
+    .then(() => alert("Đã sao chép: " + number))
+    .catch(() => alert("Không thể sao chép số này."));
 }
-function quay(){
-if(!data.danhSach.length){alert("Đã quay hết 499 số!");return}
-let viTri=Math.floor(Math.random()*data.danhSach.length);
-let so=data.danhSach.splice(viTri,1)[0];
-data.hienTai="56"+String(so).padStart(3,"0")+"2768";
-data.daQuay.unshift(data.hienTai);
-luuDuLieu();capNhat();
-document.getElementById("message").innerText="✅ Quay thành công!";
-}
-async function copySo(){
-if(!data.hienTai)return;
-try{
-await navigator.clipboard.writeText(data.hienTai);
-document.getElementById("message").innerText="✅ Đã copy: "+data.hienTai;
-}catch(e){
-let input=document.createElement("textarea");
-input.value=data.hienTai;document.body.appendChild(input);input.select();
-try{document.execCommand("copy");document.getElementById("message").innerText="✅ Đã copy: "+data.hienTai}
-catch(err){document.getElementById("message").innerText="Không thể copy!"}
-input.remove();
-}
-}
-capNhat();
 </script>
+
 </body>
 </html>
